@@ -1,0 +1,1 @@
+export default function NotFound(){return <main className="welcome"><div className="brand-mark large">◈</div><h1>이 문서는 공유되지 않습니다.</h1><p>게시자가 공유를 중지했거나<br/>주소가 올바르지 않을 수 있습니다.</p><a className="home-link" href="/">공유 서비스 홈으로</a></main>;}

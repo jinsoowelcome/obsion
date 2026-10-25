@@ -1,0 +1,2 @@
+import {NextResponse} from 'next/server';
+export function middleware(){const r=NextResponse.next();r.headers.set('Cache-Control','no-store, max-age=0');r.headers.set('X-Robots-Tag','noindex, nofollow');r.headers.set('X-Content-Type-Options','nosniff');r.headers.set('Referrer-Policy','no-referrer');r.headers.set('Content-Security-Policy',"frame-ancestors 'none'; object-src 'none'; base-uri 'self'");return r;}

@@ -1,0 +1,26 @@
+node_modules/
+dist/
+release/
+coverage/
+*.log
+*.tsbuildinfo
+.DS_Store
+.test-runtime/
+
+# Local configuration, credentials, and runtime data
+.env*
+!.env.example
+.dev.vars*
+*.pem
+*.key
+*.p12
+*.pfx
+private-key.encrypted
+.wrangler/
+.sites-runtime/
+.vinext/
+.next/
+outputs/
+
+# Raw local analysis can contain original application snippets and local paths.
+/evidence/rea-evidence.json
