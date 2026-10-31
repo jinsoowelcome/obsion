@@ -64,10 +64,11 @@ class PublishManager{
   if(!response.ok){if(method==='DELETE'&&response.status===404)return {unpublished:true};const error=Error(result.error||'공유 요청을 완료하지 못했습니다.');error.definite=response.status>=400&&response.status<500;throw error;}
   return result;
  }
- async publish(root,note,options,expectedDigest){
+ async publish(root,note,options,expectedDigest,expectedRecord){
   return this.serial(async()=>{
    await this.initialize();
    const previousRecord=this.records[keyFor(root,note.path)];
+   if(expectedRecord!==undefined&&JSON.stringify(previousRecord||null)!==expectedRecord)throw Error('미리보기 이후 공유 설정이 변경됐습니다. 다시 준비해 주세요.');
    if(previousRecord&&!previousRecord.revoked&&previousRecord.collaboration)throw Error('공동 편집을 끈 뒤 공개 페이지나 첨부파일을 업데이트해 주세요.');
    const preview=preparePublicNote(note,this.attachmentOptions(options,previousRecord));
    if(!expectedDigest||preview.digest!==expectedDigest)throw Error('미리보기 이후 내용이 변경됐습니다. 미리보기를 다시 확인해 주세요.');

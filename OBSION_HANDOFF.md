@@ -2,6 +2,8 @@
 
 공동 편집 업데이트: 공유 창에서 4자리 PIN으로 편집을 켜면 링크 참여자가 브라우저에서 함께 편집할 수 있습니다. CodeMirror OT로 변경을 병합해 로컬 원본에 자동 저장하고 공개 D1 본문도 갱신합니다. 원본 백업·YAML 보존·앱 읽기 전용 잠금·외부 변경 충돌 거부를 포함합니다. `electron/shared-editing.cjs`, `src/ShareEditor.ts`, `publish-service/CLOUDFLARE.md`가 현재 구현입니다.
 
+전역 공유 스킬 업데이트: `skills/obsion-share/`를 `npm run skill:install`로 Codex 전역 폴더에 설치합니다. 문서 공유·파일 첨부·PIN 공동 편집·같은 링크의 암호 변경·현재 공유 중인 페이지 조회를 지원하며 “옵시온/옵시언”을 모두 인식합니다. 실행 중인 앱의 `electron/skill-bridge.cjs`에 사용자 전용 Unix 소켓으로 연결하며 키와 PIN 해시를 전달하지 않습니다. 전체 테스트 37개, 패키징, 설치한 전역 도우미의 실제 앱 연결과 로컬 미리보기를 확인했습니다.
+
 첨부 다운로드 업데이트: 공유 창에서 선택한 파일을 이 PC의 앱 데이터에 복사해 두고 Cloudflare Quick Tunnel을 통해 다운로드하도록 구현했습니다. R2는 사용하지 않습니다. 다운로드 시 게시자의 PC·인터넷·Obsion 앱이 실행 중이어야 합니다. 파일당 5MiB, 최대 10개·합계 10MiB입니다. 최신 동작은 README와 `publish-service/CLOUDFLARE.md`를 참고하세요.
 
 Cloudflare 전환 업데이트: 공유 서버를 `https://obsion-publish.jinsoowelcome.workers.dev`에 배포하고 앱에 연결했습니다. 실제 서버에서 확인용 문서의 게시·수정·삭제 후 404를 검증했습니다. 실행 진입점은 `publish-service/worker/cloudflare.ts`, 배포 설정은 `publish-service/wrangler.jsonc`입니다. [현재 배포 절차](publish-service/CLOUDFLARE.md)를 우선 참고하세요. 아래 Sites 소유권·배포 설명은 이전 서비스에만 적용됩니다. 기존 공유 기록은 해당 기록의 기존 서버로 관리합니다.

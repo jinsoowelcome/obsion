@@ -6,6 +6,7 @@ const { pathToFileURL } = require('node:url');
 const { VaultStore } = require('./vault.cjs');
 const { documentArguments, openMarkdownDocument } = require('./document-open.cjs');
 const { PublishManager } = require('./publish-manager.cjs');
+const { SkillBridge } = require('./skill-bridge.cjs');
 const publishConfig = require('./publish-config.json');
 
 // Electron 45 binds the macOS Keychain service before ready. Keep its legacy
@@ -20,6 +21,7 @@ let closeApproved = false;
 let closeRequested = false;
 let closeTimeout;
 let publisher;
+let skillBridge;
 const preferencesFile = path.join(app.getPath('userData'), 'vault.json');
 let rendererReady = false;
 const pendingDocuments = new Set(documentArguments(process.argv));
@@ -161,6 +163,9 @@ async function createWindow() {
   publisher.onCollaborationChange=event=>{if(window&&!window.isDestroyed())window.webContents.send('vault:collaboration-changed',event);};
   if(Object.values(publisher.records||{}).some(record=>!record.revoked&&(record.attachments?.length||record.collaboration)))publisher.startAttachmentHost().catch(error=>console.error('로컬 공유 연결 확인 필요:',error.message));
   app.once('will-quit',()=>publisher.attachmentHost?.stop());
+  skillBridge = new SkillBridge({directory:app.getPath('userData'),publisher,getVaultRoot:async()=>{await initialize();return store.root;},drain:async()=>{await store?.drain();}});
+  await skillBridge.start();
+  app.once('will-quit',()=>skillBridge.stop());
   installIPC();
   installMenu();
   window = new BrowserWindow({

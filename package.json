@@ -12,6 +12,7 @@
     "test": "node --test tests/*.test.cjs",
     "share:key": "electron scripts/configure-publisher.cjs",
     "share:check": "electron scripts/check-cloudflare.cjs",
+    "skill:install": "node scripts/install-share-skill.cjs",
     "build:share": "vite build --config vite.share.config.ts"
   },
   "dependencies": {
