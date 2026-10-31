@@ -1,0 +1,24 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "obsion-publish",
+  "main": "worker/cloudflare.ts",
+  "compatibility_date": "2026-10-31",
+  "workers_dev": true,
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "obsion-publish",
+      "database_id": "02e15451-e183-4ce5-a47f-2f53b3b94d06",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "vars": {
+    "PUBLISHER_PUBLIC_KEY": "_RFlGQ3p9ckLoVY8R6l3GOSXZd6RIWLpxX0FE6VCr_8"
+  },
+  "account_id": "e06f87992dbf8b10f0fb296e6db3d7cc",
+  "assets": {
+    "directory": "generated",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  }
+}

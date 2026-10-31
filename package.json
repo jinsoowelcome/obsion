@@ -7,30 +7,37 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "desktop": "electron .",
-    "build": "tsc -b && vite build",
-    "package": "npm run build && electron-builder --mac dir --arm64",
-    "test": "node --test tests/*.test.cjs"
+    "build": "tsc -b && vite build && npm run build:share",
+    "package": "npm run build && electron-builder --mac dir --x64",
+    "test": "node --test tests/*.test.cjs",
+    "share:key": "electron scripts/configure-publisher.cjs",
+    "share:check": "electron scripts/check-cloudflare.cjs",
+    "build:share": "vite build --config vite.share.config.ts"
   },
   "dependencies": {
+    "@codemirror/collab": "6.1.1",
     "@codemirror/lang-markdown": "^6.3.4",
     "@codemirror/language": "^6.11.3",
+    "@codemirror/state": "6.7.6",
     "@codemirror/view": "^6.38.6",
     "@uiw/react-codemirror": "4.25.12",
     "dompurify": "3.4.17",
     "lucide-react": "1.61.0",
     "marked": "18.1.1",
     "react": "19.3.1",
-    "react-dom": "19.3.1",
-    "@codemirror/state": "6.7.6"
+    "react-dom": "19.3.1"
   },
   "devDependencies": {
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "6.1.2",
-    "electron": "45.0.0",
+    "electron": "43.8.4",
     "electron-builder": "26.18.0",
     "typescript": "^5.9.3",
     "vite": "8.3.5"
+  },
+  "engines": {
+    "node": ">=22.12 <23"
   },
   "build": {
     "appId": "local.rea.obsidian-replica",

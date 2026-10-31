@@ -7,11 +7,16 @@
   },
   "scripts": {
     "install:ci": "node scripts/install-ci.mjs",
-    "dev": "node scripts/run-framework.mjs dev",
-    "build": "node scripts/run-framework.mjs build",
-    "start": "node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js dev --config dist/server/wrangler.json --local --persist-to .wrangler/state --ip 127.0.0.1 --inspector-port 0",
+    "dev": "wrangler dev --remote",
+    "build": "npm --prefix .. run build:share && tsc -p tsconfig.worker.json && wrangler deploy --dry-run --outdir dist",
+    "start": "wrangler dev --local",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate"
+    "db:migration:new": "wrangler d1 migrations create DB",
+    "deploy": "npm --prefix .. run build:share && node scripts/deploy.mjs",
+    "db:create": "wrangler d1 create obsion-publish",
+    "db:migrate": "wrangler d1 migrations apply DB --remote",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "configure:app": "node scripts/configure-app.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

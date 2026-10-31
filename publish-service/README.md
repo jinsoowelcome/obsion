@@ -1,4 +1,10 @@
-# vinext-starter
+# Obsion Publish
+
+현재 공유 서버는 Cloudflare Workers + D1에 직접 배포합니다. 설정·배포 방법은 [CLOUDFLARE.md](CLOUDFLARE.md)를 따르세요. 아래는 이전 Sites 프레임워크의 참고 기록이며 현재 npm 빌드·배포 스크립트에는 사용하지 않습니다.
+
+---
+
+## 이전 vinext-starter 기록
 
 A clean full-stack starter running on [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and Drizzle support.
 

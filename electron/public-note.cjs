@@ -35,6 +35,7 @@ function preparePublicNote(note,options={}){
  if(Buffer.byteLength(markdown,'utf8')>MAX_PUBLIC_BYTES)throw Error('공유 본문은 200KB까지 지원합니다.');
  const summary=String(options.summary||'').trim().slice(0,400),theme=options.theme==='dark'?'dark':'light';
  const payload={title,markdown,summary,theme};
+ if(options.attachments?.length)payload.attachments=options.attachments;
  return {...payload,digest:crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex'),bytes:Buffer.byteLength(markdown,'utf8')};
 }
 module.exports={publicMarkdown,preparePublicNote,MAX_PUBLIC_BYTES};

@@ -29,6 +29,33 @@ async function fixture(run){
  finally{await fs.rm(directory,{recursive:true,force:true});}
 }
 
+test('switching sharing servers preserves the original origin for existing links',()=>fixture(async({manager,directory,fetcher,requests})=>{
+ const note={path:'note.md',content:'공유 내용'};
+ const prepared=await manager.prepare('/vault',note,{});
+ const published=await manager.publish('/vault',note,{},prepared.preview.digest);
+ const moved=new PublishManager({directory,baseUrl:'https://cloudflare.example',fetcher});
+ const next=await moved.prepare('/vault',note,{});
+ assert.equal(next.status.serviceUrl,'https://sharing.example');
+ await moved.publish('/vault',note,{},next.preview.digest);
+ assert.equal(requests.at(-1).url,'https://sharing.example/api/pages/'+published.status.id);
+ await moved.unpublish(published.status.id);
+ assert.equal(new URL(requests.at(-1).url).origin,'https://sharing.example');
+ const disconnected=new PublishManager({directory,baseUrl:'',fetcher});
+ assert.equal((await disconnected.prepare('/new-vault',note,{})).status.configured,false);
+}));
+
+test('selected attachments are copied locally and only metadata is sent to the sharing server',()=>fixture(async({manager,directory,fetcher,requests})=>{
+ manager.startAttachmentHost=async()=>{};
+ const source=path.join(directory,'파일.txt');await fs.writeFile(source,'로컬 첨부 내용');
+ const [file]=await manager.attachments.add([source]);const options={attachments:[file.id]};const note={path:'note.md',content:'본문'};
+ const prepared=await manager.prepare('/vault',note,options);
+ const published=await manager.publish('/vault',note,options,prepared.preview.digest);
+ const payload=JSON.parse(requests.at(-1).options.body);assert.equal(payload.attachments[0].data,undefined);assert.equal(payload.attachments[0].name,'파일.txt');assert(!JSON.stringify(payload).includes(source));
+ await fs.unlink(source);assert.equal(await fs.readFile(manager.attachmentPath(published.status.id,file.id),'utf8'),'로컬 첨부 내용');
+ const reopened=new PublishManager({directory,baseUrl:'https://sharing.example',fetcher});assert.equal((await reopened.prepare('/vault',note)).preview.attachments[0].id,file.id);
+ await reopened.unpublish(published.status.id);await assert.rejects(fs.access(manager.attachmentPath(published.status.id,file.id)));
+}));
+
 test('publishing removes frontmatter and hidden comments while preserving code examples',()=>{
  const source='---\npassword: secret\n---\n보이는 글 %%숨긴 내용%%\n<!-- hidden HTML -->\n\n```md\n%% 코드 예시 %%\n<!-- example -->\n```\n`%% inline example %%`\n';
  const result=publicMarkdown(source);

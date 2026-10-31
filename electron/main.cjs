@@ -119,15 +119,20 @@ function installIPC() {
     initialize,
     'prepare-publish': async (target,options) => { const {root,note}=await selectedNote(target);return publisher.prepare(root,note,options); },
     'publish-note': async (target,options,digest) => { const {root,note}=await selectedNote(target);return publisher.publish(root,note,options,digest); },
+    'configure-collaboration': async (target,id,enabled,pin) => { const {root,note}=await selectedNote(target);await store.drain();if(publisher.collaboration.find(id).notePath!==note.path)throw Error('공유할 노트를 다시 선택해 주세요.');await publisher.collaboration.configure(root,id,enabled,pin);return publisher.prepare(root,(await selectedNote(target)).note); },
+    'collaboration-state': () => publisher.collaboration.state(),
+    'select-publish-attachments': async () => { const selected=await dialog.showOpenDialog(window,{title:'공유할 첨부파일 선택',properties:['openFile','multiSelections']});return selected.canceled?[]:publisher.attachments.add(selected.filePaths); },
+    'remove-publish-attachment': id => publisher.attachments.remove(id),
+    'clear-publish-attachments': () => publisher.attachments.clear(),
     'list-publications': () => publisher.list(),
     'unpublish-note': id => publisher.unpublish(id),
     'copy-publish-link': async id => { const record=await publisher.publication(id);clipboard.writeText(record.url); },
     'open-published-note': async id => { const record=await publisher.publication(id);await shell.openExternal(record.url); },
     snapshot: async () => { await initialize(); return store.snapshot(); },
     'create-note': async (relative, content) => { await initialize(); return store.createNote(relative, content); },
-    'write-note': async (relative, content) => { await initialize(); return store.writeNote(relative, content); },
-    'rename-note': async (oldPath, newPath) => { await initialize();const root=store.root;await store.renameNote(oldPath,newPath);await publisher.rename(root,oldPath,newPath); },
-    'trash-note': async relative => { await initialize(); return store.trashNote(relative); },
+    'write-note': async (relative, content) => { await initialize();if(publisher.collaboration.locked(store.root,relative))throw Error('공동 편집 중인 노트는 공유 링크에서 편집해 주세요.');return store.writeNote(relative, content); },
+    'rename-note': async (oldPath, newPath) => { await initialize();const root=store.root;if(publisher.collaboration.locked(root,oldPath))throw Error('공동 편집을 끈 뒤 이름을 변경해 주세요.');await store.renameNote(oldPath,newPath);await publisher.rename(root,oldPath,newPath); },
+    'trash-note': async relative => { await initialize();if(publisher.collaboration.locked(store.root,relative))throw Error('공동 편집을 끈 뒤 노트를 삭제해 주세요.');return store.trashNote(relative); },
     'create-folder': async relative => { await initialize(); return store.createFolder(relative); },
     'open-vault': () => selectVault(false),
     'create-vault': () => selectVault(true),
@@ -151,8 +156,11 @@ async function createWindow() {
   // The Keychain identity above is already fixed; all visible app naming uses Obsion.
   app.setName('Obsion');
   app.setAboutPanelOptions({ applicationName: '옵시온 · Obsion', applicationVersion: app.getVersion() });
-  publisher=new PublishManager({directory:path.join(app.getPath('userData'),'publishing'),baseUrl:publishConfig.baseUrl,storage:safeStorage});
+  publisher=new PublishManager({directory:path.join(app.getPath('userData'),'publishing'),baseUrl:process.env.OBSION_PUBLISH_URL||publishConfig.baseUrl,storage:safeStorage,allowLocal:process.env.OBSION_ALLOW_LOCAL_PUBLISH==='1'});
   await publisher.initialize().catch(error=>console.error('공유 기능 초기화 확인 필요:',error.message));
+  publisher.onCollaborationChange=event=>{if(window&&!window.isDestroyed())window.webContents.send('vault:collaboration-changed',event);};
+  if(Object.values(publisher.records||{}).some(record=>!record.revoked&&(record.attachments?.length||record.collaboration)))publisher.startAttachmentHost().catch(error=>console.error('로컬 공유 연결 확인 필요:',error.message));
+  app.once('will-quit',()=>publisher.attachmentHost?.stop());
   installIPC();
   installMenu();
   window = new BrowserWindow({

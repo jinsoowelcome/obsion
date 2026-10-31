@@ -1,0 +1,11 @@
+import fs from 'node:fs/promises';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+const root = new URL('../', import.meta.url);
+const config = JSON.parse(await fs.readFile(new URL('wrangler.jsonc', root), 'utf8'));
+const database = config.d1_databases?.find(item => item.binding === 'DB');
+if (!database || database.database_id === '00000000-0000-4000-8000-000000000000') throw new Error('Cloudflare D1을 생성하고 wrangler.jsonc에 실제 database_id를 설정하세요.');
+if (!/^[\w-]{43}$/.test(config.vars?.PUBLISHER_PUBLIC_KEY || '')) throw new Error('저장소 루트에서 npm run share:key를 실행해 게시 키를 연결하세요.');
+const result = spawnSync(process.execPath, [fileURLToPath(new URL('node_modules/wrangler/bin/wrangler.js', root)), 'deploy', ...process.argv.slice(2)], { cwd: fileURLToPath(root), stdio: 'inherit', env: process.env });
+if (result.error) throw result.error;
+process.exitCode = result.status ?? 1;

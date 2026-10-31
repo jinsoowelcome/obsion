@@ -1,6 +1,7 @@
-import type {PublishOptions,PublishPrepared,PublishTarget,Publication} from './publish-types';
+import type {PublishOptions,PublishPrepared,PublishTarget,Publication,PublishAttachment} from './publish-types';
 export interface NoteFile { path: string; content: string; modified: number }
 export interface VaultSnapshot { name: string; path: string; files: NoteFile[]; folders: string[]; requestedNote?: string }
+export interface CollaborationChange {locked:{vaultPath:string;path:string;id:string}[];note?:NoteFile;vaultPath?:string}
 export interface VaultAPI {
   initialize(): Promise<VaultSnapshot>;
   snapshot(): Promise<VaultSnapshot>;
@@ -20,6 +21,12 @@ export interface VaultAPI {
   onOpenDocument?(callback: (path: string) => void): () => void;
   preparePublish?(target:PublishTarget,options?:PublishOptions):Promise<PublishPrepared>;
   publishNote?(target:PublishTarget,options:PublishOptions,digest:string):Promise<PublishPrepared>;
+  selectPublishAttachments?():Promise<PublishAttachment[]>;
+  removePublishAttachment?(id:string):Promise<void>;
+  clearPublishAttachments?():Promise<void>;
+  configureCollaboration?(target:PublishTarget,id:string,enabled:boolean,pin?:string):Promise<PublishPrepared>;
+  collaborationState?():Promise<CollaborationChange['locked']>;
+  onCollaborationChange?(callback:(event:CollaborationChange)=>void):()=>void;
   listPublications?():Promise<Publication[]>;
   unpublishNote?(id:string):Promise<{unpublished:boolean}>;
   copyPublishLink?(id:string):Promise<void>;

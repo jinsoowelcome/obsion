@@ -1,6 +1,14 @@
 # 옵시온(Obsion) 프로젝트 인수인계
 
+공동 편집 업데이트: 공유 창에서 4자리 PIN으로 편집을 켜면 링크 참여자가 브라우저에서 함께 편집할 수 있습니다. CodeMirror OT로 변경을 병합해 로컬 원본에 자동 저장하고 공개 D1 본문도 갱신합니다. 원본 백업·YAML 보존·앱 읽기 전용 잠금·외부 변경 충돌 거부를 포함합니다. `electron/shared-editing.cjs`, `src/ShareEditor.ts`, `publish-service/CLOUDFLARE.md`가 현재 구현입니다.
+
+첨부 다운로드 업데이트: 공유 창에서 선택한 파일을 이 PC의 앱 데이터에 복사해 두고 Cloudflare Quick Tunnel을 통해 다운로드하도록 구현했습니다. R2는 사용하지 않습니다. 다운로드 시 게시자의 PC·인터넷·Obsion 앱이 실행 중이어야 합니다. 파일당 5MiB, 최대 10개·합계 10MiB입니다. 최신 동작은 README와 `publish-service/CLOUDFLARE.md`를 참고하세요.
+
+Cloudflare 전환 업데이트: 공유 서버를 `https://obsion-publish.jinsoowelcome.workers.dev`에 배포하고 앱에 연결했습니다. 실제 서버에서 확인용 문서의 게시·수정·삭제 후 404를 검증했습니다. 실행 진입점은 `publish-service/worker/cloudflare.ts`, 배포 설정은 `publish-service/wrangler.jsonc`입니다. [현재 배포 절차](publish-service/CLOUDFLARE.md)를 우선 참고하세요. 아래 Sites 소유권·배포 설명은 이전 서비스에만 적용됩니다. 기존 공유 기록은 해당 기록의 기존 서버로 관리합니다.
+
 작성 기준: **2026-10-25, 한국 시간**. 새 Codex 계정이나 새 작업 환경에서 이 문서를 먼저 읽고 개발을 이어가기 위한 기록입니다. 비밀 키와 로그인 토큰의 실제 값은 포함하지 않습니다.
+
+2026-10-31 업데이트: 현재 작업 저장소는 macOS 12 Intel(x64)을 기준으로 Node.js 22, Electron 43.8.4, `release/mac/Obsion.app` 패키징을 사용합니다. 아래의 옛 설치 경로와 Apple Silicon 환경 기록은 이전 개발 Mac에서 작성한 내용이며, 현재 기기의 설치·노트·공유 상태를 뜻하지 않습니다.
 
 ## 1. 먼저 알아둘 현재 상태
 
@@ -77,7 +85,7 @@ Obsidian 복제 작업의 중심은 **REA의 JavaScript 분석과 화면 관찰*
 
 ## 4. 경로와 저장소
 
-### 현재 Mac의 실제 경로
+### 이전 개발 Mac의 실제 경로 (2026-10-25)
 
 | 대상 | 경로 |
 | --- | --- |
@@ -88,7 +96,7 @@ Obsidian 복제 작업의 중심은 **REA의 JavaScript 분석과 화면 관찰*
 | 선택한 보관함 기록 | 위 설정 폴더의 `vault.json` |
 | 공유 키와 게시 기록 | 위 설정 폴더의 `publishing/` |
 | 원본 Obsidian | `/Applications/Obsidian.app` |
-| 새 패키지 생성 위치 | 작업 폴더의 `release/mac-arm64/Obsion.app` |
+| 당시 패키지 생성 위치 | 작업 폴더의 `release/mac-arm64/Obsion.app` |
 
 작업 폴더 이름의 한글은 파일시스템에서 유니코드 정규화 방식이 다르게 보일 수 있습니다. 경로 문자열을 새로 조합하기보다 실제 폴더를 선택하거나 따옴표로 감싸 사용하세요.
 
@@ -156,7 +164,7 @@ GitHub에는 의존성·설치 앱·빌드 결과·개인 노트·개인 키·�
 
 ### 개발과 패키징
 
-검증한 로컬 환경은 macOS Apple Silicon, Node.js **24.13.1**, npm **11.8.0**입니다. 주요 버전은 Electron **45.0.0**, React **19.3.1**, Vite **8.3.5**, TypeScript **5.9.3**입니다. 정확한 의존성은 각 `package-lock.json`을 사용합니다.
+이전 개발 환경은 macOS Apple Silicon, Node.js **24.13.1**, npm **11.8.0**, Electron **45.0.0**이었습니다. 현재 macOS 12 Intel 환경은 Node.js **22.22.1**, npm **10.9.4**, Electron **43.8.4**로 빌드·패키징·실행을 확인했습니다. 정확한 의존성은 각 `package-lock.json`을 사용합니다.
 
 ```sh
 npm ci
@@ -169,7 +177,7 @@ npm run desktop
 npm run package
 ```
 
-패키징 결과는 `release/mac-arm64/Obsion.app`입니다. 이 명령은 현재 설치된 `~/Applications/Obsion.app`을 자동으로 바꾸지 않습니다. 설치 앱을 교체할 때는 기존 앱이 저장을 마치고 정상 종료된 뒤 진행합니다.
+현재 x64 패키징 결과는 `release/mac/Obsion.app`입니다. 이 명령은 다른 위치에 설치된 앱을 자동으로 바꾸지 않습니다. 설치 앱을 교체할 때는 기존 앱이 저장을 마치고 정상 종료된 뒤 진행합니다.
 
 개발 중 보관함·앱 데이터 경로를 분리할 수 있는 환경 변수는 `OBSION_VAULT`, `OBSION_USER_DATA`입니다. 기존 `OBSIDIAN_REPLICA_VAULT`, `OBSIDIAN_REPLICA_USER_DATA`도 호환용으로 지원합니다. 시험용 경로는 먼저 만들고 사용하세요.
 
@@ -260,7 +268,7 @@ node --import ./scripts/sites-env.mjs ./node_modules/wrangler/bin/wrangler.js d1
 | 번들 ID `local.rea.obsidian-replica` | 기존 macOS 앱 식별과 `.md` 파일 연결 유지 |
 | `~/Library/Application Support/Obsidian Replica` | 기존 설정·키·공유 기록·앱 저장 상태 유지 |
 | 기존 보관함 `Obsidian Replica Vault` | 사용자 파일과 공유 관리 경로 유지 |
-| 시작 직후 `app.setName('Obsidian Replica')` | Electron 45가 준비 단계에서 선택하는 macOS Keychain 식별자 유지 |
+| 시작 직후 `app.setName('Obsidian Replica')` | 준비 단계에서 선택하는 macOS Keychain 식별자 유지 |
 | 준비 후 `app.setName('Obsion')` | 실제 메뉴·앱 이름에 새 브랜드 적용 |
 | 기존 브라우저 저장 키 | 브라우저 미리보기 데이터·환경 설정 유지 |
 | `X-Replica-*` 서명 헤더와 기존 URL | 기존 클라이언트·서버·공개 링크 호환 |
@@ -343,13 +351,13 @@ GitHub에 있으므로 새 Codex 계정에서도 공개 저장소를 복제해 �
 - 노트 이름을 바꿨을 때 다른 노트의 본문 링크를 자동 수정하지 않습니다.
 - 보관함당 5,000개 노트, 노트당 8MiB, 전체 64MiB 제한이 있습니다.
 - 공개 본문은 200KiB, 제목은 200자, 설명은 400자까지입니다.
-- 공유 사이트 비밀번호, 사용자 지정 도메인, 첨부파일 공개, 보관함 전체 탐색·검색은 없습니다.
+- 공유 사이트 비밀번호, 사용자 지정 도메인, 보관함 전체 탐색·검색은 없습니다. 선택한 첨부파일은 로컬 PC를 통한 다운로드로 지원합니다.
 - 공유 서비스의 여러 사용자별 인증·권한과 안전한 키 이전 UI는 없습니다.
-- 현재 패키징은 macOS arm64용입니다. 배포용 Developer ID 서명·공증·자동 업데이트는 적용하지 않았습니다. 설치 앱은 로컬 임시 서명으로 검증했습니다.
+- 현재 패키징은 macOS 12 Intel(x64)용입니다. 배포용 Developer ID 서명·공증·자동 업데이트는 적용하지 않았습니다. 이전 Mac의 설치 앱은 로컬 임시 서명으로 검증했고, 이번 로컬 빌드에서는 코드 서명을 생략했습니다.
 
 ## 10. 설치한 도구·스킬과 연결 문제
 
-### 같은 Mac에 남아 있는 도구
+### 이전 개발 Mac에 있던 도구
 
 | 항목 | 확인한 상태 |
 | --- | --- |
